@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import { random } from 'lodash';
 import QuotesGenerator from './components/QuotesGenerator';
 import 'typeface-roboto';
@@ -15,60 +15,67 @@ const styles = {
 
 
 
-class App extends Component {
-  constructor(props){
-    super(props)
-    this.state={
-      quotes: [],
-      quoteIndex : null
+function App({classes}){
+  // constructor(props){
+  //   super(props)
+  //   this.state={
+  //     quotes: [],
+  //     quoteIndex : null
+  //   }
+  //   this.selectQuoteIndexHandler=this.selectQuoteIndexHandler.bind(this);
+  //   this.assignNewQuoteIndex=this.assignNewQuoteIndex.bind(this);
+  // }
+  const [quotes, setQuotes] = useState([]);
+  const [selectedQuoteIndex, setSelectedQuoteIndex] = useState(null);
+
+  useEffect(()=>{
+    async function fetchData(){
+      const data = await fetch('https://gist.githubusercontent.com/natebass/b0a548425a73bdf8ea5c618149fe1fce/raw/f4231cd5961f026264bb6bb3a6c41671b044f1f4/quotes.json');
+      const quotes= await data.json();
+      setQuotes(quotes);
+      setSelectedQuoteIndex(random(0,quotes.length -1));
     }
-    this.selectQuoteIndexHandler=this.selectQuoteIndexHandler.bind(this);
-    this.assignNewQuoteIndex=this.assignNewQuoteIndex.bind(this);
-  }
+    fetchData();
+    
+  },[]);
 
-  componentDidMount() {
-    fetch('https://gist.githubusercontent.com/natebass/b0a548425a73bdf8ea5c618149fe1fce/raw/f4231cd5961f026264bb6bb3a6c41671b044f1f4/quotes.json')
-      .then(data => data.json())
-      .then(quotes => this.setState({quotes}, this.assignNewQuoteIndex)
-    );
-  }
 
-  get selectedQuoteHandler() {
-    if(!this.state.quotes.length || !Number.isInteger(this.state.quoteIndex)) {
+
+  function getSelectedQuoteHandler() {
+    if(!quotes.length || !Number.isInteger(selectedQuoteIndex)) {
       return undefined;
     }
-    return this.state.quotes[this.state.quoteIndex];
+    return quotes[selectedQuoteIndex];
   }
 
-  selectQuoteIndexHandler() {
-    if (!this.state.quotes.length) {
+  function selectQuoteIndexHandler() {
+    if (!quotes.length) {
       return undefined;
     }
-    return random(0,this.state.quotes.length -1);
+    return random(0,quotes.length -1);
   }
 
 
-  assignNewQuoteIndex(){
-    this.setState({quoteIndex : this.selectQuoteIndexHandler()})
+  function assignNewQuoteIndex(){
+    setSelectedQuoteIndex(selectQuoteIndexHandler())
   }
   
-  render() {
-    return (
-      <Grid  className={this.props.classes.container} id="quote-box" justify='center' container='center'>
+  
+  return (
+      <Grid  className={classes.container} id="quote-box" justify='center' container='center'>
         <Grid xs={11} lg={8} item>
           {
-            this.selectedQuoteHandler ? 
+            getSelectedQuoteHandler() ? 
                     <QuotesGenerator 
-                      selectedQuoteHandler={this.selectedQuoteHandler} 
-                      assignNewQuoteIndex={this.assignNewQuoteIndex} 
+                      selectedQuoteHandler={getSelectedQuoteHandler()} 
+                      assignNewQuoteIndex={assignNewQuoteIndex} 
                     />
             : null
           }
           
         </Grid>
       </Grid>
-    );
-  }
-}
+  );
+} 
 
 export default withStyles(styles)(App);
